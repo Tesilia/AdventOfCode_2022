@@ -17,7 +17,7 @@ f.close()
 
 sortedCals = sorted(cals_per_elf, reverse=True)
 
-print("max cals intake: %d" %sortedCals[0]) #67027
+print("Max cals intake: %d" %sortedCals[0]) #67027
 print("Top 3 cals intake in total: %d" %sum(sortedCals[:3])) #197291
 
 
@@ -102,4 +102,104 @@ for s in subList:
     char_values.append([v for v, c in enumChar if c == common_chars_all[0]][0])
 print("Result Part 2: %d" %(sum(char_values))) #2434
 
+
+####################################################################################################################
+#                                                    Day 4                                                         # 
+####################################################################################################################
+print("\nDAY 4 Solution")
+
+cleaningList = []
+f4= open("input4.txt", "r")
+for x in f4:
+    y = x.split(',')
+    z = y[0].split('-')
+    z2 = y[1][:-1].split('-')
+    cleaningList.append((int(z[0]), int(z[1]), int(z2[0]), int(z2[1])))
+f4.close()
+
+def includesSection(a, b, x, y):
+    # check if a-b is included in x-y
+    if(a >= x and b <= y):
+        #print(a,b,x,y)
+        return True
+    #check if x-y is included in a-b
+    if (x >= a and y <= b):
+        #print(a,b,x,y)
+        return True
+    else:
+        return False
+
+def overlaps(a, b, x, y):
+    if(x <= a and a <= y):
+        return True
+    if(a <= x and b >= y):
+        return True
+    if (x <= b and b <= y):
+        return True
+    else:
+        return False
+
+count_included_sections = 0
+for (a,b,x,y) in cleaningList:
+    if(includesSection(a,b,x,y)):
+        count_included_sections += 1
+
+count_contained_at_all = 0
+for (a,b,x,y) in cleaningList:
+    if(overlaps(a,b,x,y)):
+        count_contained_at_all += 1
+
+
+print("Number of fully contained sections: %d" % count_included_sections)
+print("Number of contained sections: %d" % count_contained_at_all)
+
+
+####################################################################################################################
+#                                                    Day 5                                                         # 
+####################################################################################################################
+print("\nDAY 5 Solution") # result: CMZ
+
+#    [C]         [Q]         [V]    
+#    [D]         [D] [S]     [M] [Z]
+#    [G]     [P] [W] [M]     [C] [G]
+#    [F]     [Z] [C] [D] [P] [S] [W]
+#[P] [L]     [C] [V] [W] [W] [H] [L]
+#[G] [B] [V] [R] [L] [N] [G] [P] [F]
+#[R] [T] [S] [S] [S] [T] [D] [L] [P]
+#[N] [J] [M] [L] [P] [C] [H] [Z] [R]
+
+crates = [[''], ['N', 'R', 'G', 'P'], 
+                ['J', 'T', 'B', 'L', 'F', 'G', 'D', 'C'], 
+                ['M', 'S', 'V'], 
+                ['L', 'S', 'R', 'C', 'Z', 'P'],
+                ['P', 'S', 'L', 'V', 'C', 'W', 'D', 'Q'],
+                ['C', 'T', 'N', 'W', 'D', 'M', 'S'],
+                ['H', 'D', 'G', 'W', 'P'],
+                ['Z', 'L', 'P', 'H', 'S', 'C', 'M', 'V'],
+                ['R', 'P', 'F', 'L', 'W', 'G', 'Z']]
+steps = []
+
+f5= open("input5.txt", "r")
+for x in f5:
+    y = x.split(' ')
+    steps.append((int(y[1]), int(y[3]), int(y[5][0])))
+f5.close()
+
+def moveCrates(m, f, t):
+    crates_to_move = crates[f][-m:]
+    #crates_to_move.reverse()           #undo comment for Part1
+    crates[t].extend(crates_to_move)
+
+    i = 1
+    while i <= m:
+        crates[f].pop()
+        i += 1
+
+for (m,f,t) in steps:
+    moveCrates(m,f,t)
+
+msg = ""
+for i in list(range(len(crates)-1)):
+    msg += crates[i+1].pop()
+print("Crates on top of each stack: " + msg)
 
