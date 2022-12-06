@@ -203,3 +203,30 @@ for i in list(range(len(crates)-1)):
     msg += crates[i+1].pop()
 print("Crates on top of each stack: " + msg)
 
+
+####################################################################################################################
+#                                                    Day 6                                                         # 
+####################################################################################################################
+print("\nDAY 6 Solution")
+
+signal = ""
+f6 = open("input6.txt", "r")
+
+for x in f6:
+    signal = x[:-1]
+f6.close()
+
+def check_marker_occurence(str, s, i):
+    b = True
+    while(b):
+        current_chars = str[s:i]
+        has_repeated_chars = len(set(current_chars)) != len(current_chars)
+        if has_repeated_chars:
+            s += 1
+            i += 1
+        else:
+            b = False
+    print("First marker after character: %d" % i)
+
+check_marker_occurence(signal, 0, 4)    #1134
+check_marker_occurence(signal, 0, 14)   #2263
