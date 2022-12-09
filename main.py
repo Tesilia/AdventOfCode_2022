@@ -1,4 +1,6 @@
-
+from collections import defaultdict
+import numpy as np
+from anytree import Node, RenderTree
 ####################################################################################################################
 #                                                    Day 1                                                         # 
 ####################################################################################################################
@@ -230,3 +232,137 @@ def check_marker_occurence(str, s, i):
 
 check_marker_occurence(signal, 0, 4)    #1134
 check_marker_occurence(signal, 0, 14)   #2263
+
+
+####################################################################################################################
+#                                                    Day 7                                                         # 
+####################################################################################################################
+print("\nDAY 7 Solution")
+
+terminal = []
+f7 = open("input7.txt", "r")
+
+for x in f7:
+    terminal.append(x.split("\n")[0])
+f7.close()
+terminal.append("$ cd ..")
+
+dir_arr = []
+dir_name = []
+numbers = ['0','1','2','3','4','5','6','7','8','9']
+for command in terminal:
+    if "$ cd " in command:
+        dir = command.split(' ')[2]
+        if dir != "..":
+            dir_name.append((dir,0))
+        else:
+            copied = dir_name.copy()
+            dir_arr.append(copied)
+            dir_name.pop()
+    if command[0] in numbers:
+        size = int(command.split(' ')[0])
+        dir_name = [(d,s+size) for (d,s) in dir_name]
+
+directories = []
+root = dir_arr[-1][0][1]
+sum_d = 0
+for every_dir in dir_arr:
+    directories.append(every_dir[-1][1])
+    sum_d += every_dir[-1][1]
+directories.append(root)
+
+under100k = [size for size in directories if size <= 100000]
+total_size = sum(under100k)
+
+space_to_be_freed = 30000000 - (70000000 - root)
+directories.sort()
+delete_dir = next(x[0] for x in enumerate(directories) if x[1] >= space_to_be_freed)
+
+print("Sum of total sizes: %d" % total_size)    # 1232307
+print("Size of directory to be deleted: %d " % directories[delete_dir]) #7268994
+
+
+####################################################################################################################
+#                                                    Day 8                                                         # 
+####################################################################################################################
+print("\nDAY 8 Solution")
+
+f8 = open("input8.txt", "r")
+arr_list = []
+for line in f8:
+    rows = line.split('\n')[0]
+    elems = [int(x) for x in rows]
+    arr_list.append(elems)
+f8.close()
+
+arr = np.array(arr_list)
+scenic_scores = []
+
+def compute_scenic_score(left, right, up, down):
+    score = np.prod([left, right, up, down])
+    return score
+
+def find_next_taller_tree(tree_height, area, inorder):
+    index_pos = 0
+    if inorder:
+        pos = next(x[0] for x in enumerate(area) if x[1] >= tree_height)
+        index_pos = pos
+    else:
+        area.reverse()
+        pos = next(x[0] for x in enumerate(area) if x[1] >= tree_height)
+        index_pos = len(area) - pos -1
+    return index_pos
+
+def is_visible(arr, row, col):
+    visible = False
+    tree_height = arr[row][col]
+    left_from_tree = arr[row][:col]
+    right_from_tree = arr[row][col+1:]
+    above_from_tree = arr[0::, col][0:row]
+    down_from_tree = arr[0::, col][row+1:]
+    
+    max_l = max(left_from_tree)
+    max_r = max(right_from_tree)
+    max_a = max(above_from_tree)
+    max_d = max(down_from_tree)
+
+    look_left, look_right, look_up, look_down = 0, 0, 0, 0
+    if tree_height > max_l:
+        visible = True
+        look_left = len(left_from_tree)
+    else:
+        index_pos = find_next_taller_tree(tree_height, list(left_from_tree), False)
+        look_left = col - index_pos
+        
+    if tree_height > max_r:
+        visible = True
+        look_right = len(right_from_tree)
+    else:
+        index_pos = find_next_taller_tree(tree_height, list(right_from_tree), True)
+        look_right = index_pos+1
+
+    if tree_height > max_a:
+        visible = True
+        look_up = len(above_from_tree)
+    else:
+        index_pos = find_next_taller_tree(tree_height, list(above_from_tree), False)
+        look_up = row - index_pos
+
+    if tree_height > max_d:
+        visible = True
+        look_down = len(down_from_tree)
+    else:
+        index_pos = find_next_taller_tree(tree_height, list(down_from_tree), True)
+        look_down = index_pos+1
+
+    scenic_scores.append(compute_scenic_score(look_left, look_right, look_up, look_down))
+    return visible
+
+bool_mat = np.ones((len(arr), len(arr[0])), dtype=bool)
+
+for i in range(1, len(arr)-1):
+    for j in range(1, len(arr[0])-1):
+        bool_mat[i,j] = is_visible(arr, i, j)
+
+print("Visible trees: %d" % bool_mat.sum())     #1733
+print("Highest scenic score: %d" % max(scenic_scores))  #284648
