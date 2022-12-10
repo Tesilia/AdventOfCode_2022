@@ -1,6 +1,5 @@
 from collections import defaultdict
 import numpy as np
-from anytree import Node, RenderTree
 ####################################################################################################################
 #                                                    Day 1                                                         # 
 ####################################################################################################################
@@ -333,7 +332,7 @@ def is_visible(arr, row, col):
     else:
         index_pos = find_next_taller_tree(tree_height, list(left_from_tree), False)
         look_left = col - index_pos
-        
+
     if tree_height > max_r:
         visible = True
         look_right = len(right_from_tree)
@@ -366,3 +365,121 @@ for i in range(1, len(arr)-1):
 
 print("Visible trees: %d" % bool_mat.sum())     #1733
 print("Highest scenic score: %d" % max(scenic_scores))  #284648
+
+
+####################################################################################################################
+#                                                    Day 9                                                         # 
+####################################################################################################################
+print("\nDAY 9 Solution")
+
+f9 = open("input9.txt", "r")
+motions = []
+for line in f9:
+    rows = line.split('\n')[0]
+    r = rows.split(' ')
+    elems = (r[0],int(r[1]))
+    motions.append(elems)
+f9.close()
+
+def is_touching(head, tail): # return True if two knots are touching
+    h_i, h_j = head[0], head[1]
+    t_i, t_j = tail[0], tail[1]
+    if t_j == h_j-1 and t_i in [h_i-1, h_i, h_i +1]:
+        return True
+    if t_j == h_j and t_i in [h_i-1, h_i, h_i +1]:
+        return True
+    if t_j == h_j+1 and t_i in [h_i-1, h_i, h_i +1]:
+        return True
+    return False
+
+def move_tail(head, tail, my_grid, changeGrid): 
+    h_i, h_j = head[0], head[1]
+    t_i, t_j = tail[0], tail[1]
+    new_tail_pos = (t_i,t_j)
+    if h_i != t_i and h_j != t_j: # move diagonally
+        if abs(h_i-t_i) == 1:
+            if h_j > t_j:
+                if changeGrid: my_grid[h_i,h_j-1] = True
+                new_tail_pos =(h_i,h_j-1)
+            else:
+                if changeGrid: my_grid[h_i,h_j+1] = True
+                new_tail_pos = (h_i,h_j+1)
+        elif abs(h_j-t_j) == 1:
+            if h_i < t_i:
+                if changeGrid: my_grid[h_i+1,h_j] = True
+                new_tail_pos = (h_i+1,h_j)
+            else:
+                if changeGrid: my_grid[h_i-1,h_j] = True
+                new_tail_pos = (h_i-1,h_j)
+        else: 
+            if h_i > t_i:
+                if h_j < t_j:
+                    if changeGrid: my_grid[h_i-1, t_j-1] = True
+                    new_tail_pos = (h_i-1, t_j-1)
+                else:
+                    if changeGrid: my_grid[h_i-1, t_j+1] = True
+                    new_tail_pos = (h_i-1, t_j+1)
+            else:
+                if h_j < t_j:
+                    if changeGrid: my_grid[h_i+1, t_j-1] = True
+                    new_tail_pos = (h_i+1, t_j-1)
+                else:
+                    if changeGrid: my_grid[h_i+1, t_j-1] = True
+                    new_tail_pos = (h_i+1, t_j+1)
+    elif h_i == t_i: # move along row
+        if h_j > t_j:
+            if changeGrid: my_grid[h_i, h_j-1] = True
+            new_tail_pos = (h_i, h_j-1)
+        else:
+            if changeGrid: my_grid[h_i, h_j+1] = True
+            new_tail_pos = (h_i, h_j+1)
+    else:   # move along column
+        if h_i > t_i:
+            if changeGrid: my_grid[h_i-1, h_j] = True
+            new_tail_pos = (h_i-1, h_j)
+        else:
+            if changeGrid: my_grid[h_i+1, h_j] = True
+            new_tail_pos = (h_i+1, h_j)
+    return new_tail_pos
+
+def move_all(way, head, tail, knots, grid):
+    new_head_pos = [head[0],head[1]]
+    new_tail_pos = [tail[0],tail[1]]
+    new_knots = [kn for kn in knots]
+    if way =='R':       new_head_pos[1] = head[1]+1
+    elif way == 'U':    new_head_pos[0] = head[0]-1
+    elif way == 'L':    new_head_pos[1] = head[1]-1
+    elif way == 'D':    new_head_pos[0] = head[0]+1
+
+    last_visited_node = new_head_pos
+    if knots != []:
+        if is_touching(new_head_pos, new_knots[0]) == False:
+            new_knot = move_tail(new_head_pos, new_knots[0], grid, False)
+            new_knots[0] = new_knot
+        for i in range(1, len(knots)):
+            if is_touching(new_knots[i-1], new_knots[i]) == False:
+                new_k = move_tail(new_knots[i-1], new_knots[i], grid, False)
+                new_knots[i] = new_k
+            i += 1
+        last_visited_node = new_knots[-1]
+    if is_touching(last_visited_node, new_tail_pos) == False:
+        new_tail = move_tail(last_visited_node, new_tail_pos, grid, True)
+        new_tail_pos = new_tail
+    return new_head_pos, new_tail_pos, new_knots
+
+grid1 = np.zeros((500,500), dtype=bool)
+grid2 = np.zeros((500,500), dtype=bool)
+s = [len(grid1)//2, len(grid1)//2]
+
+grid1[s[0],s[1]], grid2[s[0],s[1]] = True, True
+
+knots1, knots2 = [], [s,s,s,s,s,s,s,s]
+head1, tail1, head2, tail2 = s, s, s, s 
+
+for m in motions:
+    for i in range(m[1]):
+        head1, tail1, knots1= move_all(m[0],head1,tail1,knots1,grid1)
+        head2, tail2, knots2 = move_all(m[0], head2, tail2, knots2, grid2)
+
+print("Number of positions visited by the tail Part1: %d" % grid1.sum()) #5883
+print("Number of positions visited by the tail Part2: %d" % grid2.sum()) # 2367
