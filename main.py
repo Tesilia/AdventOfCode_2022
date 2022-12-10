@@ -483,3 +483,62 @@ for m in motions:
 
 print("Number of positions visited by the tail Part1: %d" % grid1.sum()) #5883
 print("Number of positions visited by the tail Part2: %d" % grid2.sum()) # 2367
+
+
+####################################################################################################################
+#                                                    Day 10                                                        # 
+####################################################################################################################
+print("\nDAY 10 Solution")
+
+f10 = open("input10.txt", "r")
+program = []
+cycle = 1
+for line in f10:
+    l = line.split('\n')[0]
+    i = [cycle, l]
+    if l =='noop': cycle += 1
+    else: cycle += 2
+    program.append(i)
+f10.close()
+
+def calculate_x(x, cycle, program):
+    findIndex = [i for i, p in list(enumerate(program)) if p[0] == cycle or p[0]+1 == cycle]
+    for i in range(0, findIndex[0]):
+        if "addx" in program[i][1]:
+            x += int(program[i][1].split(' ')[1])
+    return x
+
+# for Part2 calculates the new value of x after 1 cycle
+def calculate_x2(x, cycle, program):
+    findIndex = [i for i, p in list(enumerate(program)) if p[0] == cycle or p[0]+1 == cycle]
+    for i in range(0, findIndex[0]):
+            if "addx" in program[i][1]:
+                x += int(program[i][1].split(' ')[1])
+    if program[findIndex[0]][0] != cycle:
+        if "addx" in program[findIndex[0]][1]:
+                x += int(program[findIndex[0]][1].split(' ')[1])
+    return x
+
+signals = 0
+cycles = [20,60,100,140,180,220]
+for c in cycles:
+    signals += c * calculate_x(1,c,program)
+
+print("Sum of signals: %d" % signals) # 12880
+
+current_crt_row = []
+pixels = [1,2,3] # positions of ### in the sprite
+cycles2 = [40,80,120,160,200,240]
+i = 1
+for cycle in range(1, 241):
+    if i in pixels: current_crt_row.append('#')
+    else: current_crt_row.append('.')
+    x = calculate_x2(1,cycle,program)
+    pixels = [x,x+1,x+2]
+    i += 1
+    if cycle in cycles2:
+        word = " ".join(current_crt_row)
+        print(word)
+        current_crt_row.clear()
+        i = 1
+
