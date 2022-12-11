@@ -1,5 +1,6 @@
 from collections import defaultdict
 import numpy as np
+import copy
 ####################################################################################################################
 #                                                    Day 1                                                         # 
 ####################################################################################################################
@@ -542,3 +543,90 @@ for cycle in range(1, 241):
         current_crt_row.clear()
         i = 1
 
+
+####################################################################################################################
+#                                                    Day 11                                                        # 
+####################################################################################################################
+print("\nDAY 11 Solution")
+
+f11 = open("input11.txt", "r")
+notes = []
+monkey = []
+for l in f11:
+    if l != '\n':
+        line = l.split('\n')[0]
+        if 'Starting' in line: 
+            w = line.split('items: ')[1].split(', ')
+            items = []
+            for i in range(0, len(w)):
+                items.append(int(w[i]))
+            monkey.append(items)
+        if 'Operation' in line: 
+            op = line.split('= ')
+            o = op[1].split(' ')
+            monkey.append(o)
+        if 'Test' in line:
+            d = line.split(' ')
+            monkey.append(int(d[-1]))
+        if 'true' in line or 'false' in line:
+            monkey.append(int(line.split(' ')[-1]))
+    else:
+        notes.append(monkey)
+        monkey = []
+f11.close()
+notes2 = copy.deepcopy(notes)
+
+gcd = 1
+for monkey in notes: 
+    gcd *= monkey[2]
+
+def monkey_turn(monkey, monkeys, part):
+    inspected = 0
+    if monkey[0] != []:
+        addition = True # False if it's multiplication
+        itself = False # True if the second value == 'old' 
+        if '*' in monkey[1]: addition = False
+        if len([x for x in monkey[1] if x == 'old']) == 2: itself = True
+        
+        while monkey[0] != []:
+            item = monkey[0][0]
+            inspected += 1
+            new_worry_lvl = 1
+            if addition:
+                if itself: new_worry_lvl = item + item
+                else: new_worry_lvl = item + int(monkey[1][-1])
+            else:
+                if itself: new_worry_lvl = item * item
+                else: new_worry_lvl = item * int(monkey[1][-1])
+            if part == 1:
+                worry_lvl = new_worry_lvl // 3
+            else:
+                worry_lvl = new_worry_lvl % gcd
+            if worry_lvl % monkey[2] == 0: 
+                nextmonkey = monkey[3]
+                monkeys[nextmonkey][0].append(worry_lvl) 
+            else:
+                nextmonkey = monkey[4] 
+                monkeys[nextmonkey][0].append(worry_lvl)
+            monkey[0].pop(0)
+    return inspected, monkeys
+
+rounds = 20
+inspected = [0]* len(notes)
+for i in range(0,rounds):
+    for index, monkey in list(enumerate(notes)):
+        inspects, notes = monkey_turn(monkey, notes, 1)
+        inspected[index] += inspects
+inspected.sort(reverse=True)
+monkey_business = inspected[0] * inspected[1]
+print("Level of monkey business after 20 rounds: %d" % monkey_business) # 113232
+
+rounds = 10000
+inspected = [0]* len(notes2)
+for i in range(0,rounds):
+    for index, monkey in list(enumerate(notes2)):
+        inspects, notes2 = monkey_turn(monkey, notes2, 2)
+        inspected[index] += inspects
+inspected.sort(reverse=True)
+monkey_business = inspected[0] * inspected[1]
+print("Level of monkey business after 10000 rounds: %d" % monkey_business) # 29703395016
